@@ -778,7 +778,63 @@ class Job
             }
 
             if ($user->class!=0 && strtotime($user->class_expire)<time() && strtotime($user->class_expire) > 1420041600) {
+                $subject = Config::get('appName')."-您的用户等级已经过期了";
+                $to = $user->email;
+                $text = "您好，系统发现您的账号等级已经过期了。";
+                try {
+                    Mail::send($to, $subject, 'news/warn.tpl', [
+                        "user" => $user,"text" => $text
+                    ], [
+                    ]);
+                } catch (Exception $e) {
+                    echo $e->getMessage();
+                }
+
                 $user->class=0;
+            }
+
+            if ($user->class!=0 && strtotime($user->class_expire)-86400<time() && strtotime($user->class_expire) > 1420041600) {
+                $subject = Config::get('appName')."-您的用户等级即将到期";
+                $to = $user->email;
+                $text = "您好！您的用户等级将在24小时内到期，请及时续费以免耽误您的正常使用。";
+                try {
+                    Mail::send($to, $subject, 'news/warn.tpl', [
+                        "user" => $user,"text" => $text
+                    ], [
+                    ]);
+                } catch (Exception $e) {
+                    echo $e->getMessage();
+                }
+            }
+
+            if (strtotime($user->expire_in)<time()) {
+                if (Config::get('enable_account_expire_delete')=='true') {
+                    $subject = Config::get('appName')."-您的用户账户已经过期了";
+                    $to = $user->email;
+                    $text = "您好，系统发现您的账号已经过期了。如果您在接下来的 ".Config::get('enable_account_expire_delete_days')." 天内没有续费，账号将被删除。" ;
+                    try {
+                        Mail::send($to, $subject, 'news/warn.tpl', [
+                            "user" => $user,"text" => $text
+                        ], [
+                        ]);
+                    } catch (Exception $e) {
+                        echo $e->getMessage();
+                    }
+                }
+
+                if (Config::get('enable_account_expire_delete')=='false') {
+                    $subject = Config::get('appName')."-您的用户账户已经过期了";
+                    $to = $user->email;
+                    $text = "您好，系统发现您的账号已经过期了。";
+                    try {
+                        Mail::send($to, $subject, 'news/warn.tpl', [
+                            "user" => $user,"text" => $text
+                        ], [
+                        ]);
+                    } catch (Exception $e) {
+                        echo $e->getMessage();
+                    }
+                }
             }
 
             $user->save();
